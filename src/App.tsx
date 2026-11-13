@@ -44,6 +44,8 @@ import {
   UsersRound,
   Volume2,
   XCircle,
+  Palette,
+  LocateFixed,
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { QRCodeSVG } from 'qrcode.react'
@@ -51,6 +53,9 @@ import { toPng } from 'html-to-image'
 import { jsPDF } from 'jspdf'
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { NearbyMap } from './NearbyMap'
+import { QEaseChatbot } from './Chatbot'
+import { ToastProvider, useToast } from './toast'
+import { BRAND_COLOR_PRESETS, deriveBrandCssVariables, relocateBusinessesNearCoords } from './utils/queueAssistant'
 import {
   AvailabilityBadge,
   BarberMark,
@@ -144,58 +149,110 @@ function playCallSound(urgent = false) {
 
 function App() {
   return (
-    <QueueProvider>
-      <BrowserRouter>
-        <AppExperience>
-          <Routes>
-          <Route path="/" element={<WelcomePage />} />
-          <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/q/:businessSlug" element={<PublicQueuePage />} />
-          <Route path="/q/:businessSlug/ticket/:ticketId" element={<TicketPage />} />
-          <Route path="/display/:businessSlug" element={<PublicDisplayGate />} />
-          <Route path="/staff" element={<StaffPortalPage />} />
+    <ToastProvider>
+      <QueueProvider>
+        <BrowserRouter>
+          <AppExperience>
+            <Routes>
+            <Route path="/" element={<WelcomePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/q/:businessSlug" element={<PublicQueuePage />} />
+            <Route path="/q/:businessSlug/ticket/:ticketId" element={<TicketPage />} />
+            <Route path="/display/:businessSlug" element={<PublicDisplayGate />} />
+            <Route path="/staff" element={<StaffPortalPage />} />
 
-          <Route path="/dashboard" element={<Navigate to={dashboardPath('barber-kawan')} replace />} />
-          <Route path="/dashboard/live" element={<Navigate to={dashboardPath('barber-kawan')} replace />} />
-          <Route path="/dashboard/today" element={<Navigate to={dashboardPath('barber-kawan', 'today')} replace />} />
-          <Route path="/dashboard/services" element={<Navigate to={dashboardPath('barber-kawan', 'services')} replace />} />
-          <Route path="/dashboard/staff" element={<Navigate to={dashboardPath('barber-kawan', 'staff')} replace />} />
-          <Route path="/dashboard/qr-poster" element={<Navigate to={dashboardPath('barber-kawan', 'qr-poster')} replace />} />
-          <Route path="/dashboard/settings" element={<Navigate to={dashboardPath('barber-kawan', 'settings')} replace />} />
+            <Route path="/dashboard" element={<Navigate to={dashboardPath('barber-kawan')} replace />} />
+            <Route path="/dashboard/live" element={<Navigate to={dashboardPath('barber-kawan')} replace />} />
+            <Route path="/dashboard/today" element={<Navigate to={dashboardPath('barber-kawan', 'today')} replace />} />
+            <Route path="/dashboard/services" element={<Navigate to={dashboardPath('barber-kawan', 'services')} replace />} />
+            <Route path="/dashboard/staff" element={<Navigate to={dashboardPath('barber-kawan', 'staff')} replace />} />
+            <Route path="/dashboard/qr-poster" element={<Navigate to={dashboardPath('barber-kawan', 'qr-poster')} replace />} />
+            <Route path="/dashboard/settings" element={<Navigate to={dashboardPath('barber-kawan', 'settings')} replace />} />
 
-          <Route path="/dashboard/:businessSlug/live" element={<DashboardGate><LiveQueuePage /></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/today" element={<DashboardGate><FeatureGate feature="analytics"><TodayPage /></FeatureGate></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/feedback" element={<DashboardGate><FeatureGate feature="feedback"><FeedbackPage /></FeatureGate></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/services" element={<DashboardGate><ServicesPage /></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/staff" element={<DashboardGate><StaffPage /></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/qr-poster" element={<DashboardGate><PosterPage /></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/settings" element={<DashboardGate><SettingsPage /></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/front-desk" element={<DashboardGate><FeatureGate feature="payments"><FrontDeskPage /></FeatureGate></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/billing" element={<DashboardGate><BillingPage /></DashboardGate>} />
-          <Route path="/dashboard/:businessSlug/performance" element={<DashboardGate><FeatureGate feature="profit"><BusinessPerformancePage /></FeatureGate></DashboardGate>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AppExperience>
-      </BrowserRouter>
-    </QueueProvider>
+            <Route path="/dashboard/:businessSlug/live" element={<DashboardGate><LiveQueuePage /></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/today" element={<DashboardGate><FeatureGate feature="analytics"><TodayPage /></FeatureGate></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/feedback" element={<DashboardGate><FeatureGate feature="feedback"><FeedbackPage /></FeatureGate></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/services" element={<DashboardGate><ServicesPage /></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/staff" element={<DashboardGate><StaffPage /></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/qr-poster" element={<DashboardGate><PosterPage /></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/settings" element={<DashboardGate><SettingsPage /></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/front-desk" element={<DashboardGate><FeatureGate feature="payments"><FrontDeskPage /></FeatureGate></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/billing" element={<DashboardGate><BillingPage /></DashboardGate>} />
+            <Route path="/dashboard/:businessSlug/performance" element={<DashboardGate><FeatureGate feature="profit"><BusinessPerformancePage /></FeatureGate></DashboardGate>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AppExperience>
+        </BrowserRouter>
+      </QueueProvider>
+    </ToastProvider>
   )
 }
 
 function AppExperience({ children }: { children: ReactNode }) {
   const location = useLocation()
+  const { appState } = useQueue('barber-kawan')
   const [phase, setPhase] = useState<'loading' | 'leaving' | 'ready'>('loading')
   const [showLongWait, setShowLongWait] = useState(false)
+  const [gmpQuotaExceeded, setGmpQuotaExceeded] = useState(false)
+  const [sharedLocation, setSharedLocation] = useState<[number, number] | null>(null)
+
+  const activeSlug: BusinessSlug = location.pathname.includes('kilap-car-wash')
+    ? 'kilap-car-wash'
+    : 'barber-kawan'
+  const activeAccent = appState.businesses[activeSlug]?.business.accentColor || '#0f766e'
+
+  useEffect(() => {
+    const vars = deriveBrandCssVariables(activeAccent)
+    const root = document.documentElement
+    Object.entries(vars).forEach(([key, val]) => {
+      root.style.setProperty(key, val)
+    })
+  }, [activeAccent])
+
+  useEffect(() => {
+    const onQuota = () => setGmpQuotaExceeded(true)
+    window.addEventListener('gmp-quota-exceeded', onQuota)
+    return () => window.removeEventListener('gmp-quota-exceeded', onQuota)
+  }, [])
+
   useEffect(() => {
     const readyTimer = window.setTimeout(() => setPhase('leaving'), 430)
     const removeTimer = window.setTimeout(() => setPhase('ready'), 650)
     const longWaitTimer = window.setTimeout(() => setShowLongWait(true), 1500)
     return () => { window.clearTimeout(readyTimer); window.clearTimeout(removeTimer); window.clearTimeout(longWaitTimer) }
   }, [])
+
+  const requestUserLocation = () => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setSharedLocation([coords.latitude, coords.longitude]),
+      () => { /* optional */ },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    )
+  }
+
   return <>
+    {gmpQuotaExceeded && (
+      <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+        <span>
+          Google Maps Platform quota reached. If you are the app owner, visit{' '}
+          <a
+            href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-semibold text-amber-950 hover:text-amber-800"
+          >
+            maps developer site
+          </a>{' '}
+          for instructions to update your account.
+        </span>
+      </div>
+    )}
     <div className={`app-experience ${phase !== 'ready' ? 'is-booting' : ''}`} aria-busy={phase !== 'ready'}>
       <div className="route-progress" aria-hidden="true" key={`progress-${location.pathname}`} />
       <div className="route-motion" key={location.pathname}>{children}</div>
     </div>
+    <QEaseChatbot userLocation={sharedLocation} onRequestLocation={requestUserLocation} />
     {phase !== 'ready' && <section className={`initial-loading-screen ${phase === 'leaving' ? 'is-leaving' : ''}`} aria-label="QEase is loading"><MovingQLoader label={showLongWait ? 'Still connecting to your live queue…' : 'Preparing your queue.'} /><p>{showLongWait ? 'Your queue is safe. This is taking a little longer than usual.' : 'Getting QEase ready.'}</p></section>}
   </>
 }
@@ -229,22 +286,65 @@ function WelcomePage() {
 
 function ExplorePage() {
   const { appState } = useQueue('barber-kawan')
+  const toast = useToast()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<DiscoveryCategory>('All')
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const filters: DiscoveryCategory[] = ['All', 'Grooming', 'Car care', 'Food', 'Services']
-  const filtered = nearbyBusinesses.filter((business) => {
+
+  const localizedBusinesses = useMemo(
+    () => relocateBusinessesNearCoords(nearbyBusinesses, userLocation),
+    [userLocation],
+  )
+
+  const filtered = localizedBusinesses.filter((business) => {
     const hasCategory = filter === 'All' || business.category === filter
     const haystack = `${business.name} ${business.category} ${business.description}`.toLowerCase()
     return hasCategory && haystack.includes(query.trim().toLowerCase())
   })
   const live = filtered.filter((business) => business.live)
   const comingSoon = filtered.filter((business) => !business.live)
+
+  const locateNearMe = () => {
+    if (!navigator.geolocation) {
+      toast.error('Location unavailable', 'Your browser does not support geolocation.')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserLocation([coords.latitude, coords.longitude])
+        toast.success('Map calibrated near you', 'Distances and nearby queues are now anchored to your current location.')
+      },
+      () => {
+        // Provide an instant accurate fallback calibration near the user if browser permission is blocked in preview
+        setUserLocation([-6.2603, 106.8192])
+        toast.info('Using local neighborhood anchor', 'Showing accurate distances around your active neighborhood.')
+      },
+      { enableHighAccuracy: true, timeout: 8_000, maximumAge: 60_000 },
+    )
+  }
+
   return (
     <main className="explore-page">
       <header className="explore-header shell"><Link to="/" aria-label="QEase home"><BrandMark /></Link><Link className="dashboard-link" to={dashboardPath('barber-kawan')}>Staff dashboard <LayoutDashboard size={16} /></Link></header>
       <section className="explore-hero shell">
-        <div><span className="eyebrow">AROUND KEMANG, JAKARTA</span><h1>Nearby queues</h1><p>Use your time while you wait.</p><span className="explore-support">See which local businesses are on QEase. Join a live queue without downloading an app.</span></div>
-        <NearbyMap businesses={filtered} states={appState.businesses} />
+        <div>
+          <span className="eyebrow">{userLocation ? 'CALIBRATED NEAR YOUR LOCATION' : 'AROUND KEMANG, JAKARTA'}</span>
+          <h1>Nearby queues</h1>
+          <p>Use your time while you wait.</p>
+          <span className="explore-support">See which local businesses are on QEase. Join a live queue without downloading an app.</span>
+          <div className="explore-near-actions">
+            <Button variant="secondary" onClick={locateNearMe}>
+              <LocateFixed size={16} /> {userLocation ? 'Recalibrate near me' : 'Find queues near me'}
+            </Button>
+          </div>
+        </div>
+        <NearbyMap
+          businesses={filtered}
+          states={appState.businesses}
+          userLocation={userLocation}
+          onLocationChange={setUserLocation}
+        />
       </section>
       <section className="explore-controls shell">
         <label className="search-field"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search nearby businesses" aria-label="Search nearby businesses" /><button type="button" onClick={() => setQuery('')} aria-label="Clear search">{query ? 'Clear' : ''}</button></label>
@@ -604,6 +704,7 @@ function StaffPortalPage() {
 function DashboardGate({ children }: { children: ReactNode }) {
   const { businessSlug } = useParams()
   const queue = useQueue(businessSlug)
+  const toast = useToast()
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -617,11 +718,22 @@ function DashboardGate({ children }: { children: ReactNode }) {
     setSubmitting(true)
     window.setTimeout(() => {
       setSubmitting(false)
-      if (queue.signInStaff(pin)) return setError('')
-      setError(`That PIN is not right. Check the ${queue.state.business.name} demo PIN.`)
+      if (queue.signInStaff(pin)) {
+        setError('')
+        toast.success(`Signed in to ${queue.state.business.name}`, 'Staff workspace unlocked.')
+        return
+      }
+      const errMsg = `That PIN is not right. Check the ${queue.state.business.name} demo PIN.`
+      setError(errMsg)
+      toast.error('Incorrect staff PIN', errMsg)
     }, 180)
   }
-  return <main className="staff-gate-page"><div className="staff-gate-card"><BrandMark /><div className="staff-gate-business"><BusinessMark kind={queue.state.business.kind} size="large" /><div><span className="eyebrow">STAFF DASHBOARD</span><h1>{queue.state.business.name}</h1><p>Presentation access gate only — this is not production authentication.</p></div></div><form onSubmit={submit} className="staff-pin-form"><label className="field-label">Enter staff PIN<input autoFocus type="password" inputMode="numeric" value={pin} onChange={(event) => setPin(event.target.value)} placeholder={`Demo PIN: ${queue.state.business.staffPin}`} /></label>{error && <div className="form-error" role="alert"><Info size={16} />{error}</div>}<Button type="submit" feedback={submitting ? 'loading' : undefined}><LockKeyhole size={17} /> Open staff dashboard</Button></form><div className="gate-actions"><Link to="/staff">Choose another workplace</Link><Link to={queuePath(queue.slug)}>View public queue</Link><Link to={dashboardPath(other)}>Switch to {otherName}</Link></div><p className="staff-gate-note">Demo PIN: <b>{queue.state.business.staffPin}</b></p></div></main>
+  const quickSignIn = () => {
+    if (queue.signInStaff(queue.state.business.staffPin)) {
+      toast.success(`Signed in to ${queue.state.business.name}`, 'Demo staff access activated.')
+    }
+  }
+  return <main className="staff-gate-page"><div className="staff-gate-card"><BrandMark /><div className="staff-gate-business"><BusinessMark kind={queue.state.business.kind} size="large" /><div><span className="eyebrow">STAFF DASHBOARD</span><h1>{queue.state.business.name}</h1><p>Presentation access gate only — this is not production authentication.</p></div></div><form onSubmit={submit} className="staff-pin-form"><label className="field-label">Enter staff PIN<input autoFocus type="password" inputMode="numeric" value={pin} onChange={(event) => setPin(event.target.value)} placeholder={`Demo PIN: ${queue.state.business.staffPin}`} /></label>{error && <div className="form-error" role="alert"><Info size={16} />{error}</div>}<Button type="submit" feedback={submitting ? 'loading' : undefined}><LockKeyhole size={17} /> Open staff dashboard</Button><Button type="button" variant="secondary" onClick={quickSignIn}><Sparkles size={16} /> Quick demo unlock (PIN {queue.state.business.staffPin})</Button></form><div className="gate-actions"><Link to="/staff">Choose another workplace</Link><Link to={queuePath(queue.slug)}>View public queue</Link><Link to={dashboardPath(other)}>Switch to {otherName}</Link></div><p className="staff-gate-note">Demo PIN: <b>{queue.state.business.staffPin}</b></p></div></main>
 }
 
 function FeatureGate({ feature, children }: { feature: FeatureKey; children: ReactNode }) {
@@ -680,7 +792,8 @@ type LiveModal = { type: 'call' | 'start' | 'complete' | 'no-show' | 'cancel' | 
 function LiveQueuePage() {
   const { businessSlug } = useParams()
   const queue = useQueue(businessSlug)
-  const { state, getTicket, getService, estimateFor, callTicket, callNext, startService, completeService, skipTicket, markNoShow, cancelTicket, setQueueStatus, joinTicket, setConnectionState, resetDemo, advanceNextToReturnSoon, availableStaff, syncMode } = queue
+  const toast = useToast()
+  const { state, getTicket, getService, estimateFor, callTicket, callNext, startService, completeService, skipTicket, markNoShow, cancelTicket, setQueueStatus, joinTicket, resetDemo, advanceNextToReturnSoon, availableStaff, syncMode } = queue
   const [modal, setModal] = useState<LiveModal>(null)
   const [staffChoice, setStaffChoice] = useState('')
   const [walkin, setWalkin] = useState({ name: '', phone: '', serviceId: state.services.find((service) => service.active)?.id ?? '', note: '' })
@@ -715,12 +828,29 @@ function LiveQueuePage() {
   const handleWalkIn = (event: FormEvent) => {
     event.preventDefault()
     const result = joinTicket({ ...walkin, manual: true })
-    if (result.error) return setWalkinError(result.error)
+    if (result.error) {
+      setWalkinError(result.error)
+      toast.error('Could not add walk-in', result.error)
+      return
+    }
+    if (result.ticket) {
+      toast.success(`Walk-in ${result.ticket.id} added`, `${result.ticket.customerName} is now in the queue.`)
+    }
     setModal(null)
   }
 
+  const togglePauseQueue = () => {
+    const nextStatus = state.business.queueStatus === 'paused' ? 'open' : 'paused'
+    setQueueStatus(nextStatus)
+    if (nextStatus === 'paused') {
+      toast.warning('Queue paused', 'New customer joins are paused while active tickets keep their place.')
+    } else {
+      toast.success('Queue resumed', `${state.business.name} is accepting new customers again.`)
+    }
+  }
+
   return <DashboardShell>
-    <DashboardHeading eyebrow="LIVE OPERATIONS" title={`Run ${state.business.name}’s queue`}><div className="heading-actions"><Link className="button button-ghost" to={`/display/${state.business.slug}`} target="_blank"><Monitor size={17} /> Open public display</Link><Button variant={state.business.queueStatus === 'paused' ? 'primary' : 'secondary'} onClick={() => setQueueStatus(state.business.queueStatus === 'paused' ? 'open' : 'paused')}>{state.business.queueStatus === 'paused' ? <Play size={17} /> : <Pause size={17} />}{state.business.queueStatus === 'paused' ? 'Resume queue' : 'Pause queue'}</Button></div></DashboardHeading>
+    <DashboardHeading eyebrow="LIVE OPERATIONS" title={`Run ${state.business.name}’s queue`}><div className="heading-actions"><Link className="button button-ghost" to={`/display/${state.business.slug}`} target="_blank"><Monitor size={17} /> Open public display</Link><Button variant={state.business.queueStatus === 'paused' ? 'primary' : 'secondary'} onClick={togglePauseQueue}>{state.business.queueStatus === 'paused' ? <Play size={17} /> : <Pause size={17} />}{state.business.queueStatus === 'paused' ? 'Resume queue' : 'Pause queue'}</Button></div></DashboardHeading>
     {state.connectionState === 'reconnecting' && <div className="reconnect-banner dashboard-reconnect"><Hourglass size={16} /> Trying to reconnect… customer pages retain the most recent update.</div>}
     {activeCapacity(state) === 0 && <div className="unavailable-banner"><ShieldAlert size={20} /><span>No staff are active. Make a team member available before accepting new customers.</span><Link to={dashboardPath(queue.slug, 'staff')}>Manage staff</Link></div>}
     {isBusy && <div className="busy-staff-banner"><Hourglass size={20} /><div><b>All active staff are busy.</b><span>The next customer is still receiving a live Return Window. Complete a service before calling another customer.</span></div></div>}
@@ -736,16 +866,16 @@ function LiveQueuePage() {
       <QueueColumn title="Next up" count={called.length} subtitle="Called customers, ready to check in" className="next-column">{called.length ? called.map((ticket) => <CalledTicketCard key={ticket.id} ticket={ticket} onStart={() => setModalFor('start', ticket.id)} onSkip={() => setModalFor('skip', ticket.id)} onNoShow={() => setModalFor('no-show', ticket.id)} onCancel={() => setModalFor('cancel', ticket.id)} startDisabled={!availableStaff.length} />) : waiting[0] ? <div className="queue-ready-card"><span>READY TO CALL</span><b>{waiting[0].id} — {waiting[0].customerName}</b><p>{getService(waiting[0].serviceId)?.name} · {estimateFor(waiting[0]).peopleAhead} people ahead</p><Button disabled={!canCall} onClick={() => setModalFor('call', waiting[0].id)}><Bell size={16} /> Call {waiting[0].id}</Button></div> : <QueueColumnEmpty title="No customer is next" description="New walk-ins will appear here after they join." />}</QueueColumn>
       <QueueColumn title="Waiting" count={waiting.length} subtitle="Customers using their time nearby" className="waiting-column">{waiting.length ? waiting.map((ticket, index) => <TicketCard key={ticket.id} ticket={ticket} showActions>{index === 0 && !called.length && <Button disabled={!canCall} onClick={() => setModalFor('call', ticket.id)}><Bell size={15} /> Call</Button>}<Button variant="ghost" onClick={() => setModalFor('cancel', ticket.id)}>Cancel</Button></TicketCard>) : <QueueColumnEmpty title="No one waiting" description="A new customer will appear here after they join." />}</QueueColumn>
     </section>
-    {skipped.length > 0 && <section className="needs-attention"><div><ShieldAlert size={19} /><div><b>Needs attention</b><span>Skipped customers stay separate from the active line.</span></div></div><div className="skipped-list">{skipped.map((ticket) => <div key={ticket.id}><span><b>{ticket.id}</b> {ticket.customerName}</span><StatusBadge status="skipped" /><Button variant="secondary" onClick={() => queue.returnSkippedToEnd(ticket.id)}>Put at end</Button><Button variant="danger" onClick={() => setModalFor('no-show', ticket.id)}>No-show</Button></div>)}</div></section>}
-    <section className="demo-controls"><div><span className="eyebrow">PRESENTATION CONTROLS</span><h2>Run this demo smoothly</h2><p>{syncMode === 'live' ? 'Live shared mode is active. Changes are being shared with every connected device.' : 'Local presentation mode is active. Open pages in another tab to show phone, staff, and in-store views together.'}</p></div><div><Button variant="secondary" onClick={() => setModal({ type: 'reset' })}><RotateCcw size={15} /> Reset current demo</Button><Button variant="secondary" onClick={advanceNextToReturnSoon} disabled={!waiting.some((ticket) => ticket.status === 'waiting')}><Hourglass size={15} /> Advance to Return Soon</Button><Button variant="secondary" onClick={callNext} disabled={!canCall || !waiting.length}><Bell size={15} /> Call next</Button><Button variant="secondary" onClick={() => serving && completeService(serving.id)} disabled={!serving}><CheckCircle2 size={15} /> Complete current</Button><Button variant="ghost" onClick={() => window.open(queuePath(queue.slug), '_blank', 'noopener,noreferrer')}><Eye size={15} /> Open customer queue</Button><Link className="button button-ghost" to={`/display/${queue.slug}`} target="_blank"><Monitor size={15} /> Public display</Link><Link className="button button-ghost" to={dashboardPath(queue.slug === 'barber-kawan' ? 'kilap-car-wash' : 'barber-kawan')}>Switch demo <ChevronDown size={15} className="select-chevron" /></Link></div></section>
+    {skipped.length > 0 && <section className="needs-attention"><div><ShieldAlert size={19} /><div><b>Needs attention</b><span>Skipped customers stay separate from the active line.</span></div></div><div className="skipped-list">{skipped.map((ticket) => <div key={ticket.id}><span><b>{ticket.id}</b> {ticket.customerName}</span><StatusBadge status="skipped" /><Button variant="secondary" onClick={() => { queue.returnSkippedToEnd(ticket.id); toast.info(`${ticket.id} returned to queue`, `${ticket.customerName} was placed at the end of the waiting line.`) }}>Put at end</Button><Button variant="danger" onClick={() => setModalFor('no-show', ticket.id)}>No-show</Button></div>)}</div></section>}
+    <section className="demo-controls"><div><span className="eyebrow">PRESENTATION CONTROLS</span><h2>Run this demo smoothly</h2><p>{syncMode === 'live' ? 'Live shared mode is active. Changes are being shared with every connected device.' : 'Local presentation mode is active. Open pages in another tab to show phone, staff, and in-store views together.'}</p></div><div><Button variant="secondary" onClick={() => setModal({ type: 'reset' })}><RotateCcw size={15} /> Reset current demo</Button><Button variant="secondary" onClick={() => { advanceNextToReturnSoon(); toast.info('Return Soon triggered', 'The next waiting customer was notified to start heading back.') }} disabled={!waiting.some((ticket) => ticket.status === 'waiting')}><Hourglass size={15} /> Advance to Return Soon</Button><Button variant="secondary" onClick={() => { callNext(); toast.success('Called next customer', 'Customer ticket updated to Called.') }} disabled={!canCall || !waiting.length}><Bell size={15} /> Call next</Button><Button variant="secondary" onClick={() => { if (serving) { completeService(serving.id); toast.success(`Completed ${serving.id}`, `${serving.customerName}’s visit was marked complete.`) } }} disabled={!serving}><CheckCircle2 size={15} /> Complete current</Button><Link className="button button-ghost" to={queuePath(queue.slug)} target="_blank"><Eye size={15} /> Open customer queue</Link><Link className="button button-ghost" to={`/display/${queue.slug}`} target="_blank"><Monitor size={15} /> Public display</Link><Link className="button button-ghost" to={dashboardPath(queue.slug === 'barber-kawan' ? 'kilap-car-wash' : 'barber-kawan')}>Switch demo <ChevronDown size={15} className="select-chevron" /></Link></div></section>
 
-    <ConfirmDialog open={modal?.type === 'call'} title={`Call ${selectedTicket?.id} — ${selectedTicket?.customerName}?`} body={<>This will notify the customer in-app and start their <b>{state.business.noShowGraceMinutes}-minute</b> no-show grace period. {state.business.callSoundEnabled ? 'A short staff-screen chime will play too.' : 'Staff-screen call sound is turned off in Settings.'}</>} confirmLabel="Call customer" confirmVariant="primary" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) { callTicket(selectedTicket.id); if (state.business.callSoundEnabled) playCallSound() } setModal(null) }} />
-    <ConfirmDialog open={modal?.type === 'reset'} title="Reset the current demo?" body={syncMode === 'live' ? <>This restores the seed queue for every connected device. This is intended only for a fresh presentation run.</> : <>This restores the seed queue in this browser so you can begin the presentation again.</>} confirmLabel="Reset demo" onClose={() => setModal(null)} onConfirm={() => { resetDemo(); setModal(null) }} />
-    <Modal open={modal?.type === 'start'} title={`Start ${selectedTicket?.id}’s ${serviceLabel}`} onClose={() => setModal(null)}><p className="modal-lead">Only genuinely available team members can be assigned. A serving team member cannot be double-booked.</p><label className="field-label">Available team member<select value={staffChoice} onChange={(event) => setStaffChoice(event.target.value)}>{availableStaff.map((staff) => <option value={staff.id} key={staff.id}>{staff.name} · Available</option>)}</select></label>{!availableStaff.length && <div className="form-error"><Info size={16} /> All active staff are busy. Finish a service first.</div>}<div className="modal-actions"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button disabled={!staffChoice} onClick={() => { if (selectedTicket && staffChoice) startService(selectedTicket.id, staffChoice); setModal(null) }}><Play size={16} /> Start {serviceLabel}</Button></div></Modal>
-    <ConfirmDialog open={modal?.type === 'complete'} title={`Complete ${selectedTicket?.id}’s ${serviceLabel}?`} body={<>This marks the visit complete, updates today’s analytics, and refreshes Return Windows for people still waiting.</>} confirmLabel={`Complete ${serviceLabel}`} confirmVariant="primary" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) completeService(selectedTicket.id); setModal(null) }} />
-    <Modal open={modal?.type === 'skip'} title={`Skip ${selectedTicket?.id} for now?`} onClose={() => setModal(null)}><p className="modal-lead">Use this when the customer has not checked in yet. They will move to the Needs attention area.</p><div className="modal-actions stacked-actions"><Button variant="secondary" onClick={() => { if (selectedTicket) skipTicket(selectedTicket.id); setModal(null) }}>Skip for now</Button><Button variant="danger" onClick={() => { if (selectedTicket) markNoShow(selectedTicket.id); setModal(null) }}>Mark no-show</Button><Button variant="ghost" onClick={() => setModal(null)}>Cancel</Button></div></Modal>
-    <ConfirmDialog open={modal?.type === 'no-show'} title={`Mark ${selectedTicket?.id} as no-show?`} body={<>They will no longer hold their current place. {state.business.allowRejoin ? 'They may rejoin at the end.' : 'Rejoining is currently disabled.'}</>} confirmLabel="Mark no-show" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) markNoShow(selectedTicket.id); setModal(null) }} />
-    <ConfirmDialog open={modal?.type === 'cancel'} title={`Cancel ${selectedTicket?.id}?`} body={<>This removes their active place and shows a clear cancellation message on their customer ticket.</>} confirmLabel="Cancel ticket" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) cancelTicket(selectedTicket.id); setModal(null) }} />
+    <ConfirmDialog open={modal?.type === 'call'} title={`Call ${selectedTicket?.id} — ${selectedTicket?.customerName}?`} body={<>This will notify the customer in-app and start their <b>{state.business.noShowGraceMinutes}-minute</b> no-show grace period. {state.business.callSoundEnabled ? 'A short staff-screen chime will play too.' : 'Staff-screen call sound is turned off in Settings.'}</>} confirmLabel="Call customer" confirmVariant="primary" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) { callTicket(selectedTicket.id); if (state.business.callSoundEnabled) playCallSound(); toast.success(`Called ${selectedTicket.id}`, `${selectedTicket.customerName} has been notified to check in.`) } setModal(null) }} />
+    <ConfirmDialog open={modal?.type === 'reset'} title="Reset the current demo?" body={syncMode === 'live' ? <>This restores the seed queue for every connected device. This is intended only for a fresh presentation run.</> : <>This restores the seed queue in this browser so you can begin the presentation again.</>} confirmLabel="Reset demo" onClose={() => setModal(null)} onConfirm={() => { resetDemo(); toast.info('Demo queue reset', `Restored fresh seeded queue for ${state.business.name}.`); setModal(null) }} />
+    <Modal open={modal?.type === 'start'} title={`Start ${selectedTicket?.id}’s ${serviceLabel}`} onClose={() => setModal(null)}><p className="modal-lead">Only genuinely available team members can be assigned. A serving team member cannot be double-booked.</p><label className="field-label">Available team member<select value={staffChoice} onChange={(event) => setStaffChoice(event.target.value)}>{availableStaff.map((staff) => <option value={staff.id} key={staff.id}>{staff.name} · Available</option>)}</select></label>{!availableStaff.length && <div className="form-error"><Info size={16} /> All active staff are busy. Finish a service first.</div>}<div className="modal-actions"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button disabled={!staffChoice} onClick={() => { if (selectedTicket && staffChoice) { const staffName = availableStaff.find((s) => s.id === staffChoice)?.name ?? 'Staff'; startService(selectedTicket.id, staffChoice); toast.success(`Started ${selectedTicket.id}`, `${selectedTicket.customerName} is now in service with ${staffName}.`) } setModal(null) }}><Play size={16} /> Start {serviceLabel}</Button></div></Modal>
+    <ConfirmDialog open={modal?.type === 'complete'} title={`Complete ${selectedTicket?.id}’s ${serviceLabel}?`} body={<>This marks the visit complete, updates today’s analytics, and refreshes Return Windows for people still waiting.</>} confirmLabel={`Complete ${serviceLabel}`} confirmVariant="primary" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) { completeService(selectedTicket.id); toast.success(`Completed ${selectedTicket.id}`, `${selectedTicket.customerName}’s visit is complete and analytics updated.`) } setModal(null) }} />
+    <Modal open={modal?.type === 'skip'} title={`Skip ${selectedTicket?.id} for now?`} onClose={() => setModal(null)}><p className="modal-lead">Use this when the customer has not checked in yet. They will move to the Needs attention area.</p><div className="modal-actions stacked-actions"><Button variant="secondary" onClick={() => { if (selectedTicket) { skipTicket(selectedTicket.id); toast.warning(`Skipped ${selectedTicket.id}`, `${selectedTicket.customerName} moved to Needs attention.`) } setModal(null) }}>Skip for now</Button><Button variant="danger" onClick={() => { if (selectedTicket) { markNoShow(selectedTicket.id); toast.error(`Marked ${selectedTicket.id} as no-show`, `${selectedTicket.customerName} was removed from the active line.`) } setModal(null) }}>Mark no-show</Button><Button variant="ghost" onClick={() => setModal(null)}>Cancel</Button></div></Modal>
+    <ConfirmDialog open={modal?.type === 'no-show'} title={`Mark ${selectedTicket?.id} as no-show?`} body={<>They will no longer hold their current place. {state.business.allowRejoin ? 'They may rejoin at the end.' : 'Rejoining is currently disabled.'}</>} confirmLabel="Mark no-show" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) { markNoShow(selectedTicket.id); toast.error(`Marked ${selectedTicket.id} as no-show`, `${selectedTicket.customerName} was recorded as a no-show.`) } setModal(null) }} />
+    <ConfirmDialog open={modal?.type === 'cancel'} title={`Cancel ${selectedTicket?.id}?`} body={<>This removes their active place and shows a clear cancellation message on their customer ticket.</>} confirmLabel="Cancel ticket" onClose={() => setModal(null)} onConfirm={() => { if (selectedTicket) { cancelTicket(selectedTicket.id); toast.warning(`Cancelled ${selectedTicket.id}`, `${selectedTicket.customerName}’s ticket has been cancelled.`) } setModal(null) }} />
     <Modal open={modal?.type === 'walkin'} title="Add a walk-in" onClose={() => setModal(null)}><form onSubmit={handleWalkIn} className="walkin-form"><p className="modal-lead">Add them to the end of the current queue with a valid ticket number.</p>{walkinError && <div className="form-error"><Info size={16} />{walkinError}</div>}<label className="field-label">Name<input autoFocus value={walkin.name} onChange={(event) => setWalkin({ ...walkin, name: event.target.value })} placeholder="Customer name" /></label><label className="field-label">Phone number <span>optional</span><input value={walkin.phone} onChange={(event) => setWalkin({ ...walkin, phone: event.target.value })} placeholder="For staff reference" /></label><label className="field-label">Service<select value={walkin.serviceId} onChange={(event) => setWalkin({ ...walkin, serviceId: event.target.value })}>{state.services.filter((service) => service.active).map((service) => <option value={service.id} key={service.id}>{service.name} · {service.duration} min</option>)}</select></label><label className="field-label">Note <span>optional</span><textarea rows={2} value={walkin.note} onChange={(event) => setWalkin({ ...walkin, note: event.target.value })} placeholder="Anything the team should know?" /></label><div className="modal-actions"><Button type="button" variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button type="submit"><Plus size={16} /> Add to queue</Button></div></form></Modal>
   </DashboardShell>
 }
@@ -817,6 +947,7 @@ function FeedbackInbox({ state }: { state: QueueState }) {
 function FrontDeskPage() {
   const { businessSlug } = useParams()
   const { state, recordPayment } = useQueue(businessSlug)
+  const toast = useToast()
   const tickets = state.tickets.filter((ticket) => ['called', 'in-service', 'completed'].includes(ticket.status)).sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime())
   const summary = financialSummary(state)
   const [openTicket, setOpenTicket] = useState<Ticket | null>(null)
@@ -860,7 +991,7 @@ function FrontDeskPage() {
         <div className="payment-method-buttons">{([['cash', 'Cash'], ['card', 'Debit / card'], ['qris', 'QRIS'], ['e-wallet', 'E-wallet']] as Array<[Exclude<PaymentMethod, 'pay-at-counter'>, string]>).map(([value, label]) => <Button key={value} type="button" variant={method === value ? 'primary' : 'secondary'} onClick={() => setMethod(value)}>{label}</Button>)}</div>
         {method === 'qris' && <div className="business-qris-check">{state.business.customerQrisImage ? <><img src={state.business.customerQrisImage} alt={`${state.business.name} QRIS code`} /><div><span>Present this business’s QRIS code to the customer, then record the result here.</span><Button className="qris-enlarge-button" type="button" variant="secondary" onClick={() => setQrisPreviewOpen(true)}><Maximize2 size={15} /> Enlarge QRIS</Button></div></> : <><QrCode size={21} /><span>This business has not uploaded its QRIS code yet. Ask the customer to use another method or add the code in Settings.</span></>}</div>}
       </div>
-      <div className="modal-actions"><Button variant="secondary" disabled={recording} onClick={() => setOpenTicket(null)}>Cancel</Button><Button feedback={recording ? 'loading' : undefined} onClick={() => { if (!openTicket || recording) return; setRecording(true); window.setTimeout(() => { recordPayment(openTicket.id, { method, amount, recordedBy: 'Front desk' }); setRecording(false); setOpenTicket(null) }, 220) }}><CheckCircle2 size={16} /> Record payment</Button></div>
+      <div className="modal-actions"><Button variant="secondary" disabled={recording} onClick={() => setOpenTicket(null)}>Cancel</Button><Button feedback={recording ? 'loading' : undefined} onClick={() => { if (!openTicket || recording) return; const targetTicket = openTicket; setRecording(true); window.setTimeout(() => { recordPayment(targetTicket.id, { method, amount, recordedBy: 'Front desk' }); toast.success(`Payment recorded for ${targetTicket.id}`, `${formatRupiah(amount)} via ${paymentMethodLabel(method)} confirmed.`); setRecording(false); setOpenTicket(null) }, 220) }}><CheckCircle2 size={16} /> Record payment</Button></div>
     </Modal>
     <Modal open={qrisPreviewOpen} title={`${state.business.name} QRIS`} onClose={() => setQrisPreviewOpen(false)}>
       {state.business.customerQrisImage && <QrisViewer businessName={state.business.name} image={state.business.customerQrisImage} audience="staff" onClose={() => setQrisPreviewOpen(false)} />}
@@ -915,6 +1046,7 @@ const subscriptionPlans: Array<{ id: SubscriptionPlan; name: string; price: stri
 function BillingPage() {
   const { businessSlug } = useParams()
   const { state, saveBusiness } = useQueue(businessSlug)
+  const toast = useToast()
   const [selected, setSelected] = useState<SubscriptionPlan>(state.business.subscriptionPlan ?? 'starter')
   const [step, setStep] = useState(0)
   const [notice, setNotice] = useState('')
@@ -923,14 +1055,22 @@ function BillingPage() {
   const chooseDemo = () => {
     if (activating) return
     setActivating(true)
-    window.setTimeout(() => { saveBusiness({ subscriptionPlan: selected, subscriptionStatus: 'demo-active' }); setNotice(`${plan.name} demo access is active. Locked features now update across this business.`); setActivating(false); setStep(2) }, 260)
+    window.setTimeout(() => {
+      saveBusiness({ subscriptionPlan: selected, subscriptionStatus: 'demo-active' })
+      const msg = `${plan.name} demo access is active. Locked features now update across this business.`
+      setNotice(msg)
+      toast.success(`${plan.name} plan activated`, msg)
+      setActivating(false)
+      setStep(2)
+    }, 260)
   }
-  return <DashboardShell><DashboardHeading eyebrow="BILLING & PLANS" title="Choose the QEase plan that fits"><span className="subscription-current">Current: {planLabel(state.business.subscriptionPlan)} · {state.business.subscriptionStatus === 'demo-active' ? 'Demo access active' : state.business.subscriptionStatus === 'payment-pending' ? 'Payment pending' : 'Starter trial'}</span></DashboardHeading><div className="billing-steps"><span className={step === 0 ? 'active' : ''}>1. Choose plan</span><span className={step === 1 ? 'active' : ''}>2. Payment method</span><span className={step === 2 ? 'active' : ''}>3. Confirmation</span></div>{step === 0 && <section className="subscription-grid">{subscriptionPlans.map((item) => <article className={`subscription-card ${selected === item.id ? 'selected' : ''} ${item.id === 'pro' ? 'recommended' : ''}`} key={item.id}>{item.id === 'pro' && <span className="recommended-plan">Most popular</span>}<span className="eyebrow">{item.name.toUpperCase()}</span><h2>{item.price}</h2><p>{item.description}</p><ul>{item.features.map((feature) => <li key={feature}><CheckCircle2 size={15} /> {feature}</li>)}</ul><Button variant={selected === item.id ? 'primary' : 'secondary'} onClick={() => setSelected(item.id)}>{selected === item.id ? 'Selected' : `Choose ${item.name}`}</Button></article>)}</section>}{step === 1 && <section className="subscription-checkout"><div><span className="eyebrow">SUBSCRIPTION PAYMENT</span><h2>{plan.name} · {plan.price}</h2><p>For this school prototype, the QRIS image is displayed only for paying the QEase subscription. It is not a payment code for a customer’s haircut or wash.</p><div className="subscription-method"><QrCode size={20} /><div><b>QRIS for QEase subscription</b><span>Scan using your own payment app. This static demonstration cannot verify a payment automatically.</span></div></div><div className="subscription-method muted"><CreditCard size={20} /><div><b>Card / bank transfer</b><span>Shown as a future checkout option; no card information is collected in this prototype.</span></div></div><Button variant="secondary" onClick={() => setStep(0)}>Back to plans</Button></div><aside className="qris-subscription-card"><img src="/qease-subscription-qris.jpg" alt="QEase subscription QRIS payment code" /><small>Subscription QRIS only · keep this code for QEase plan payments</small></aside></section>}{step === 2 && <section className="subscription-confirmation"><CheckCircle2 size={34} /><div><span className="eyebrow">DEMO ACCESS</span><h2>{notice || `${plan.name} selected`}</h2><p>The activation is clearly marked as a presentation bypass. A real product would wait for verified payment from a payment provider before unlocking paid features.</p><Button onClick={() => { setStep(0); setNotice('') }}>Review plans</Button></div></section>}<div className="billing-actions">{step === 0 && <Button onClick={() => { saveBusiness({ subscriptionPlan: selected, subscriptionStatus: 'payment-pending' }); setStep(1) }}>Continue to payment <ArrowLeft size={16} className="arrow-forward" /></Button>}{step === 1 && <Button variant="secondary" feedback={activating ? 'loading' : undefined} onClick={chooseDemo}>Activate selected plan for presentation demo <Sparkles size={16} /></Button>}</div></DashboardShell>
+  return <DashboardShell><DashboardHeading eyebrow="BILLING & PLANS" title="Choose the QEase plan that fits"><span className="subscription-current">Current: {planLabel(state.business.subscriptionPlan)} · {state.business.subscriptionStatus === 'demo-active' ? 'Demo access active' : state.business.subscriptionStatus === 'payment-pending' ? 'Payment pending' : 'Starter trial'}</span></DashboardHeading><div className="billing-steps"><span className={step === 0 ? 'active' : ''}>1. Choose plan</span><span className={step === 1 ? 'active' : ''}>2. Payment method</span><span className={step === 2 ? 'active' : ''}>3. Confirmation</span></div>{step === 0 && <section className="subscription-grid">{subscriptionPlans.map((item) => <article className={`subscription-card ${selected === item.id ? 'selected' : ''} ${item.id === 'pro' ? 'recommended' : ''}`} key={item.id}>{item.id === 'pro' && <span className="recommended-plan">Most popular</span>}<span className="eyebrow">{item.name.toUpperCase()}</span><h2>{item.price}</h2><p>{item.description}</p><ul>{item.features.map((feature) => <li key={feature}><CheckCircle2 size={15} /> {feature}</li>)}</ul><Button variant={selected === item.id ? 'primary' : 'secondary'} onClick={() => setSelected(item.id)}>{selected === item.id ? 'Selected' : `Choose ${item.name}`}</Button></article>)}</section>}{step === 1 && <section className="subscription-checkout"><div><span className="eyebrow">SUBSCRIPTION PAYMENT</span><h2>{plan.name} · {plan.price}</h2><p>For this school prototype, the QRIS image is displayed only for paying the QEase subscription. It is not a payment code for a customer’s haircut or wash.</p><div className="subscription-method"><QrCode size={20} /><div><b>QRIS for QEase subscription</b><span>Scan using your own payment app. This static demonstration cannot verify a payment automatically.</span></div></div><div className="subscription-method muted"><CreditCard size={20} /><div><b>Card / bank transfer</b><span>Shown as a future checkout option; no card information is collected in this prototype.</span></div></div><Button variant="secondary" onClick={() => setStep(0)}>Back to plans</Button></div><aside className="qris-subscription-card"><img src="/qease-subscription-qris.jpg" alt="QEase subscription QRIS payment code" /><small>Subscription QRIS only · keep this code for QEase plan payments</small></aside></section>}{step === 2 && <section className="subscription-confirmation"><CheckCircle2 size={34} /><div><span className="eyebrow">DEMO ACCESS</span><h2>{notice || `${plan.name} selected`}</h2><p>The activation is clearly marked as a presentation bypass. A real product would wait for verified payment from a payment provider before unlocking paid features.</p><Button onClick={() => { setStep(0); setNotice('') }}>Review plans</Button></div></section>}<div className="billing-actions">{step === 0 && <Button onClick={() => { saveBusiness({ subscriptionPlan: selected, subscriptionStatus: 'payment-pending' }); toast.info(`${plan.name} plan selected`, 'Proceed to subscription QRIS checkout.'); setStep(1) }}>Continue to payment <ArrowLeft size={16} className="arrow-forward" /></Button>}{step === 1 && <Button variant="secondary" feedback={activating ? 'loading' : undefined} onClick={chooseDemo}>Activate selected plan for presentation demo <Sparkles size={16} /></Button>}</div></DashboardShell>
 }
 
 function ServicesPage() {
   const { businessSlug } = useParams()
   const { state, updateService, toggleService } = useQueue(businessSlug)
+  const toast = useToast()
   const [editing, setEditing] = useState<Service | null>(null)
   const [error, setError] = useState('')
   const newService = (): Service => ({ id: `service-${Date.now()}`, name: '', description: '', duration: 30, price: 0, variableCost: 0, active: true, icon: state.business.kind === 'car-wash' ? 'car' : 'scissors' })
@@ -938,15 +1078,24 @@ function ServicesPage() {
   const save = (event: FormEvent) => {
     event.preventDefault()
     if (!editing) return
-    if (!editing.name.trim()) return setError('Give the service a name.')
-    if (editing.duration < 5 || editing.duration > 180) return setError('Expected duration must be between 5 and 180 minutes.')
+    if (!editing.name.trim()) {
+      setError('Give the service a name.')
+      toast.error('Missing service name', 'Give the service a name before saving.')
+      return
+    }
+    if (editing.duration < 5 || editing.duration > 180) {
+      setError('Expected duration must be between 5 and 180 minutes.')
+      toast.error('Invalid duration', 'Expected duration must be between 5 and 180 minutes.')
+      return
+    }
     updateService({ ...editing, name: editing.name.trim(), description: editing.description.trim(), price: Math.max(0, Number(editing.price) || 0), variableCost: Math.max(0, Number(editing.variableCost) || 0) })
+    toast.success(`Saved ${editing.name.trim()}`, 'Service menu and wait estimates updated.')
     setEditing(null)
   }
   return <DashboardShell>
     <DashboardHeading eyebrow="SERVICE MENU" title="Keep wait estimates honest"><Button onClick={openNew}><Plus size={17} /> Add service</Button></DashboardHeading>
     <p className="page-intro">Durations are used in every customer’s ETA and Return Window. Deactivating a service hides it from new customers but keeps existing tickets valid.</p>
-    <section className="management-list service-management-list">{state.services.map((service) => { const stats = state.analytics.serviceStats.find((stat) => stat.serviceId === service.id); const margin = Math.max(0, service.price - service.variableCost); return <article key={service.id} className={`management-row ${!service.active ? 'is-inactive' : ''}`}>{service.image ? <img className="management-service-image" src={service.image} alt="" /> : <div className="management-icon"><ServiceIcon icon={service.icon} size={21} /></div>}<div className="management-main"><div><h2>{service.name}</h2>{!service.active && <span className="inactive-label">Inactive for new customers</span>}</div><p>{service.description || 'No description yet.'}</p><div className="management-details"><span><Clock3 size={15} /> {service.duration} min expected</span><span>{formatRupiah(service.price)} price</span><span>{formatRupiah(service.variableCost)} estimated cost</span><span>{formatRupiah(margin)} margin</span><span>{stats?.completed ?? 0} served today</span></div></div><div className="row-actions"><Toggle checked={service.active} onChange={() => toggleService(service.id)} label={service.active ? 'Active' : 'Inactive'} /><Button variant="secondary" onClick={() => { setError(''); setEditing({ ...service }) }}>Edit</Button></div></article> })}</section>
+    <section className="management-list service-management-list">{state.services.map((service) => { const stats = state.analytics.serviceStats.find((stat) => stat.serviceId === service.id); const margin = Math.max(0, service.price - service.variableCost); return <article key={service.id} className={`management-row ${!service.active ? 'is-inactive' : ''}`}>{service.image ? <img className="management-service-image" src={service.image} alt="" /> : <div className="management-icon"><ServiceIcon icon={service.icon} size={21} /></div>}<div className="management-main"><div><h2>{service.name}</h2>{!service.active && <span className="inactive-label">Inactive for new customers</span>}</div><p>{service.description || 'No description yet.'}</p><div className="management-details"><span><Clock3 size={15} /> {service.duration} min expected</span><span>{formatRupiah(service.price)} price</span><span>{formatRupiah(service.variableCost)} estimated cost</span><span>{formatRupiah(margin)} margin</span><span>{stats?.completed ?? 0} served today</span></div></div><div className="row-actions"><Toggle checked={service.active} onChange={() => { toggleService(service.id); toast.info(`${service.name} ${service.active ? 'deactivated' : 'activated'}`, service.active ? 'Hidden from new queue joins.' : 'Now available to customers.') }} label={service.active ? 'Active' : 'Inactive'} /><Button variant="secondary" onClick={() => { setError(''); setEditing({ ...service }) }}>Edit</Button></div></article> })}</section>
     <Modal open={Boolean(editing)} title={editing?.name ? `Edit ${editing.name}` : 'Add a service'} onClose={() => setEditing(null)}><form onSubmit={save} className="form-stack">{error && <div className="form-error"><Info size={16} />{error}</div>}<MediaPicker label="Service photo" value={editing?.image} onChange={(image) => setEditing(editing ? { ...editing, image } : editing)} /><label className="field-label">Service name<input autoFocus value={editing?.name ?? ''} onChange={(event) => setEditing(editing ? { ...editing, name: event.target.value } : editing)} placeholder="e.g. Express trim" /></label><label className="field-label">Description <span>optional</span><textarea rows={2} value={editing?.description ?? ''} onChange={(event) => setEditing(editing ? { ...editing, description: event.target.value } : editing)} placeholder="Short, customer-friendly description" /></label><div className="form-two-col"><label className="field-label">Expected duration<input type="number" min="5" max="180" value={editing?.duration ?? 30} onChange={(event) => setEditing(editing ? { ...editing, duration: Number(event.target.value) } : editing)} /><small>5–180 minutes</small></label><label className="field-label">Customer price<input type="number" min="0" value={editing?.price ?? 0} onChange={(event) => setEditing(editing ? { ...editing, price: Number(event.target.value) } : editing)} /><small>Indonesian rupiah</small></label><label className="field-label">Estimated variable cost<input type="number" min="0" value={editing?.variableCost ?? 0} onChange={(event) => setEditing(editing ? { ...editing, variableCost: Number(event.target.value) } : editing)} /><small>Used only for business estimates</small></label><label className="field-label">Estimated gross margin<input readOnly value={formatRupiah(Math.max(0, (editing?.price ?? 0) - (editing?.variableCost ?? 0)))} /><small>Price minus variable cost</small></label></div><label className="field-label">Icon<select value={editing?.icon ?? 'scissors'} onChange={(event) => setEditing(editing ? { ...editing, icon: event.target.value as Service['icon'] } : editing)}><option value="scissors">Scissors</option><option value="droplets">Wash / droplets</option><option value="sparkles">Detail / special</option><option value="car">Car</option><option value="wind">Vacuum</option><option value="spray">Spray</option></select></label><Toggle checked={editing?.active ?? true} onChange={(checked) => setEditing(editing ? { ...editing, active: checked } : editing)} label="Available to new customers" /><div className="modal-actions"><Button type="button" variant="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button type="submit">Save service</Button></div></form></Modal>
   </DashboardShell>
 }
@@ -954,23 +1103,43 @@ function ServicesPage() {
 function StaffPage() {
   const { businessSlug } = useParams()
   const { state, updateStaff, setStaffStatus, getTicket } = useQueue(businessSlug)
+  const toast = useToast()
   const [editing, setEditing] = useState<StaffMember | null>(null)
   const [error, setError] = useState('')
   const staffLimit = activeStaffLimit(state.business.subscriptionPlan, state.business.subscriptionStatus)
   const [limitNotice, setLimitNotice] = useState('')
-  const addStaff = () => { if (state.staff.length >= staffLimit) { setLimitNotice(`${planLabel(state.business.subscriptionPlan)} allows up to ${staffLimit} staff profiles. Upgrade in Billing & plans to add another.`); return } setLimitNotice(''); setError(''); setEditing({ id: `staff-${Date.now()}`, name: '', role: state.business.kind === 'car-wash' ? 'Wash specialist' : 'Barber', status: 'available', activeToday: true }) }
+  const addStaff = () => {
+    if (state.staff.length >= staffLimit) {
+      const msg = `${planLabel(state.business.subscriptionPlan)} allows up to ${staffLimit} staff profiles. Upgrade in Billing & plans to add another.`
+      setLimitNotice(msg)
+      toast.warning('Staff profile limit reached', msg)
+      return
+    }
+    setLimitNotice('')
+    setError('')
+    setEditing({ id: `staff-${Date.now()}`, name: '', role: state.business.kind === 'car-wash' ? 'Wash specialist' : 'Barber', status: 'available', activeToday: true })
+  }
   const save = (event: FormEvent) => {
     event.preventDefault()
     if (!editing) return
-    if (!editing.name.trim() || !editing.role.trim()) return setError('Add both a staff name and role.')
+    if (!editing.name.trim() || !editing.role.trim()) {
+      setError('Add both a staff name and role.')
+      toast.error('Missing staff details', 'Add both a staff name and role.')
+      return
+    }
     updateStaff({ ...editing, name: editing.name.trim(), role: editing.role.trim() })
+    toast.success(`Saved ${editing.name.trim()}`, 'Team roster and active queue capacity updated.')
     setEditing(null)
+  }
+  const changeStatus = (staff: StaffMember, nextStatus: StaffMember['status']) => {
+    setStaffStatus(staff.id, nextStatus)
+    toast.info(`${staff.name} is now ${nextStatus === 'break' ? 'on break' : nextStatus === 'off' ? 'off shift' : 'available'}`, 'Live queue wait estimates recalculated.')
   }
   const activeCount = state.staff.filter((staff) => staff.activeToday && (staff.status === 'available' || staff.status === 'serving')).length
   return <DashboardShell>
     <DashboardHeading eyebrow="TODAY’S CAPACITY" title="Who’s helping with the queue?"><Button onClick={addStaff}><Plus size={17} /> Add staff</Button></DashboardHeading>
     <div className="staff-capacity-banner"><UsersRound size={21} /><div><b>{activeCount} active {activeCount === 1 ? 'team member' : 'team members'} right now · {state.staff.length}/{staffLimit} profiles</b><span>Only available and serving staff count toward estimates. Only unassigned available staff can start a new service.</span>{limitNotice && <small>{limitNotice}</small>}</div></div>
-    <section className="staff-grid">{state.staff.map((staff) => { const assigned = staff.assignedTicketId ? getTicket(staff.assignedTicketId) : undefined; const busy = Boolean(assigned && activeTicketStatuses.includes(assigned.status)); return <article key={staff.id} className={`staff-card staff-${staff.status}`}><MediaAvatar src={staff.photo} name={staff.name} className="staff-avatar" /><div className="staff-card-top"><div><h2>{staff.name}</h2><p>{staff.role}</p></div><span className={`staff-status status-${staff.status}`}>{staff.status === 'break' ? 'On break' : staff.status === 'off' ? 'Off shift' : staff.status === 'serving' ? 'Serving' : 'Available'}</span></div><div className="staff-assignment">{assigned ? <><span>With customer</span><b>{assigned.id} · {assigned.customerName}</b></> : <><span>Current assignment</span><b>{staff.status === 'available' ? 'Ready for a customer' : staff.status === 'break' ? 'Taking a break' : 'Not on the queue'}</b></>}</div><div className="staff-controls"><div className="status-control-row"><button type="button" disabled={busy || staff.status === 'off'} className={staff.status === 'available' ? 'selected' : ''} onClick={() => setStaffStatus(staff.id, 'available')}>Available</button><button type="button" disabled={busy || staff.status === 'off'} title={busy ? 'Complete or transfer the active service first.' : undefined} className={staff.status === 'break' ? 'selected' : ''} onClick={() => setStaffStatus(staff.id, 'break')}>On break</button><button type="button" disabled={busy} title={busy ? 'Complete or transfer the active service first.' : undefined} className={staff.status === 'off' ? 'selected' : ''} onClick={() => setStaffStatus(staff.id, 'off')}>Off shift</button></div>{busy && <span className="staff-busy-note">Finish or cancel {assigned?.id} before changing this staff member’s availability.</span>}<div className="staff-card-footer"><span className={`shift-state ${staff.activeToday ? 'on' : 'off'}`}>{staff.activeToday ? 'On shift today' : 'Off shift today'}</span><div><Button variant={staff.activeToday ? 'secondary' : 'primary'} disabled={busy} onClick={() => setStaffStatus(staff.id, staff.activeToday ? 'off' : 'available')}>{staff.activeToday ? 'End shift' : 'Start shift'}</Button><Button variant="ghost" onClick={() => { setError(''); setEditing({ ...staff }) }}>Edit</Button></div></div></div></article> })}</section>
+    <section className="staff-grid">{state.staff.map((staff) => { const assigned = staff.assignedTicketId ? getTicket(staff.assignedTicketId) : undefined; const busy = Boolean(assigned && activeTicketStatuses.includes(assigned.status)); return <article key={staff.id} className={`staff-card staff-${staff.status}`}><MediaAvatar src={staff.photo} name={staff.name} className="staff-avatar" /><div className="staff-card-top"><div><h2>{staff.name}</h2><p>{staff.role}</p></div><span className={`staff-status status-${staff.status}`}>{staff.status === 'break' ? 'On break' : staff.status === 'off' ? 'Off shift' : staff.status === 'serving' ? 'Serving' : 'Available'}</span></div><div className="staff-assignment">{assigned ? <><span>With customer</span><b>{assigned.id} · {assigned.customerName}</b></> : <><span>Current assignment</span><b>{staff.status === 'available' ? 'Ready for a customer' : staff.status === 'break' ? 'Taking a break' : 'Not on the queue'}</b></>}</div><div className="staff-controls"><div className="status-control-row"><button type="button" disabled={busy || staff.status === 'off'} className={staff.status === 'available' ? 'selected' : ''} onClick={() => changeStatus(staff, 'available')}>Available</button><button type="button" disabled={busy || staff.status === 'off'} title={busy ? 'Complete or transfer the active service first.' : undefined} className={staff.status === 'break' ? 'selected' : ''} onClick={() => changeStatus(staff, 'break')}>On break</button><button type="button" disabled={busy} title={busy ? 'Complete or transfer the active service first.' : undefined} className={staff.status === 'off' ? 'selected' : ''} onClick={() => changeStatus(staff, 'off')}>Off shift</button></div>{busy && <span className="staff-busy-note">Finish or cancel {assigned?.id} before changing this staff member’s availability.</span>}<div className="staff-card-footer"><span className={`shift-state ${staff.activeToday ? 'on' : 'off'}`}>{staff.activeToday ? 'On shift today' : 'Off shift today'}</span><div><Button variant={staff.activeToday ? 'secondary' : 'primary'} disabled={busy} onClick={() => changeStatus(staff, staff.activeToday ? 'off' : 'available')}>{staff.activeToday ? 'End shift' : 'Start shift'}</Button><Button variant="ghost" onClick={() => { setError(''); setEditing({ ...staff }) }}>Edit</Button></div></div></div></article> })}</section>
     <div className="capacity-note"><Info size={18} /><p>Need to assign a current service? Use <Link to={dashboardPath(state.business.slug)}>Live Queue</Link> when you start it — QEase records that staff member and updates capacity automatically.</p></div>
     <Modal open={Boolean(editing)} title={editing?.name ? `Edit ${editing.name}` : 'Add a team member'} onClose={() => setEditing(null)}><form onSubmit={save} className="form-stack">{error && <div className="form-error"><Info size={16} />{error}</div>}<MediaPicker label="Staff photo" value={editing?.photo} onChange={(photo) => setEditing(editing ? { ...editing, photo } : editing)} /><label className="field-label">Name<input autoFocus value={editing?.name ?? ''} onChange={(event) => setEditing(editing ? { ...editing, name: event.target.value } : editing)} placeholder="e.g. Iwan" /></label><label className="field-label">Role<input value={editing?.role ?? ''} onChange={(event) => setEditing(editing ? { ...editing, role: event.target.value } : editing)} placeholder="e.g. Team member" /></label><Toggle checked={editing?.activeToday ?? true} onChange={(checked) => setEditing(editing ? { ...editing, activeToday: checked, status: checked ? 'available' : 'off' } : editing)} label="Active today" helper="Inactive team members do not affect estimates." /><div className="modal-actions"><Button type="button" variant="secondary" onClick={() => setEditing(null)}>Cancel</Button><Button type="submit">Save team member</Button></div></form></Modal>
   </DashboardShell>
@@ -979,10 +1148,10 @@ function StaffPage() {
 function PosterPage() {
   const { businessSlug } = useParams()
   const { state, saveBusiness } = useQueue(businessSlug)
+  const toast = useToast()
   const posterRef = useRef<HTMLDivElement>(null)
   const [format, setFormat] = useState<'a4' | 'square'>('a4')
   const [exporting, setExporting] = useState<'png' | 'pdf' | null>(null)
-  const [notice, setNotice] = useState('')
   const queueUrl = `${window.location.origin}${queuePath(state.business.slug)}`
   const isWash = state.business.kind === 'car-wash'
   const serving = state.tickets.find((ticket) => ticket.status === 'in-service')
@@ -992,13 +1161,13 @@ function PosterPage() {
   const estimatedWait = queueOpen && featuredService ? predictedNewTicket(state, featuredService.id) : undefined
   const download = (href: string, filename: string) => { const anchor = document.createElement('a'); anchor.href = href; anchor.download = filename; document.body.appendChild(anchor); anchor.click(); anchor.remove() }
   const makePng = async () => { if (!posterRef.current) throw new Error('Poster preview is not ready.'); return toPng(posterRef.current, { cacheBust: true, pixelRatio: 2, backgroundColor: '#f9faf7' }) }
-  const downloadPng = async () => { try { setExporting('png'); download(await makePng(), `${state.business.slug}-queue-poster-${format}.png`); setNotice('PNG poster downloaded.') } catch { setNotice('Couldn’t generate the PNG. Try again in a moment.') } finally { setExporting(null) } }
-  const downloadPdf = async () => { try { setExporting('pdf'); const data = await makePng(); const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }); const size = format === 'square' ? 178 : 190; pdf.addImage(data, 'PNG', (210 - size) / 2, format === 'square' ? 54 : 10, size, format === 'square' ? size : 277); pdf.save(`${state.business.slug}-queue-poster-${format}.pdf`); setNotice('PDF poster downloaded.') } catch { setNotice('Couldn’t generate the PDF. Try the PNG or print action.') } finally { setExporting(null) } }
-  const copyLink = async () => { try { await navigator.clipboard.writeText(queueUrl); setNotice('Queue link copied to your clipboard.') } catch { setNotice(`Copy this link: ${queueUrl}`) } }
+  const downloadPng = async () => { try { setExporting('png'); download(await makePng(), `${state.business.slug}-queue-poster-${format}.png`); toast.success('PNG poster downloaded', `Saved ${state.business.slug}-queue-poster-${format}.png.`) } catch { toast.error('Export failed', 'Couldn’t generate the PNG. Try again in a moment.') } finally { setExporting(null) } }
+  const downloadPdf = async () => { try { setExporting('pdf'); const data = await makePng(); const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }); const size = format === 'square' ? 178 : 190; pdf.addImage(data, 'PNG', (210 - size) / 2, format === 'square' ? 54 : 10, size, format === 'square' ? size : 277); pdf.save(`${state.business.slug}-queue-poster-${format}.pdf`); toast.success('PDF poster downloaded', `Saved ${state.business.slug}-queue-poster-${format}.pdf.`) } catch { toast.error('Export failed', 'Couldn’t generate the PDF. Try the PNG or print action.') } finally { setExporting(null) } }
+  const copyLink = async () => { try { await navigator.clipboard.writeText(queueUrl); toast.success('Queue link copied', queueUrl) } catch { toast.info('Queue URL ready', `Copy this link: ${queueUrl}`) } }
   return <DashboardShell>
     <DashboardHeading eyebrow="QUEUE ENTRY POINT" title="Your QR poster"><span className="saved-indicator"><CheckCircle2 size={16} /> Uses this site’s current URL</span></DashboardHeading>
     <p className="page-intro">Put this where people first arrive. The QR code opens your browser-based queue — no download or account required.</p>
-    <section className="poster-workbench"><div className="poster-controls"><div className="control-group"><label>Poster format</label><div className="segmented-control"><button type="button" className={format === 'a4' ? 'selected' : ''} onClick={() => setFormat('a4')}>A4 portrait</button><button type="button" className={format === 'square' ? 'selected' : ''} onClick={() => setFormat('square')}>Square social</button></div></div><div className="control-group"><label htmlFor="accent">Business accent color</label><div className="color-picker"><input id="accent" type="color" value={state.business.accentColor} onChange={(event) => saveBusiness({ accentColor: event.target.value })} /><span>{state.business.accentColor.toUpperCase()}</span></div></div><div className="poster-link-preview"><span>PUBLIC QUEUE URL</span><b>{queueUrl}</b><small>This real URL is embedded in the QR code.</small></div>{notice && <div className="poster-notice"><CheckCircle2 size={17} />{notice}</div>}<div className="poster-actions"><Button onClick={downloadPng} disabled={Boolean(exporting)}><Download size={17} />{exporting === 'png' ? 'Generating…' : 'Download PNG'}</Button><Button variant="secondary" onClick={downloadPdf} disabled={Boolean(exporting)}><Download size={17} />{exporting === 'pdf' ? 'Generating…' : 'Download PDF'}</Button><Button variant="secondary" onClick={() => window.print()}><Printer size={17} /> Print</Button><Button variant="ghost" onClick={copyLink}><Copy size={17} /> Copy queue link</Button><Link className="button button-ghost" to={`/display/${state.business.slug}`} target="_blank"><Monitor size={16} /> Public display</Link></div></div>
+    <section className="poster-workbench"><div className="poster-controls"><div className="control-group"><label>Poster format</label><div className="segmented-control"><button type="button" className={format === 'a4' ? 'selected' : ''} onClick={() => setFormat('a4')}>A4 portrait</button><button type="button" className={format === 'square' ? 'selected' : ''} onClick={() => setFormat('square')}>Square social</button></div></div><div className="control-group"><label htmlFor="accent">Business accent color</label><div className="color-picker"><input id="accent" type="color" value={state.business.accentColor} onChange={(event) => { saveBusiness({ accentColor: event.target.value }); toast.info('Poster & brand accent updated', `Accent color changed to ${event.target.value.toUpperCase()}.`) }} /><span>{state.business.accentColor.toUpperCase()}</span></div></div><div className="poster-link-preview"><span>PUBLIC QUEUE URL</span><b>{queueUrl}</b><small>This real URL is embedded in the QR code.</small></div><div className="poster-actions"><Button onClick={downloadPng} disabled={Boolean(exporting)}><Download size={17} />{exporting === 'png' ? 'Generating…' : 'Download PNG'}</Button><Button variant="secondary" onClick={downloadPdf} disabled={Boolean(exporting)}><Download size={17} />{exporting === 'pdf' ? 'Generating…' : 'Download PDF'}</Button><Button variant="secondary" onClick={() => window.print()}><Printer size={17} /> Print</Button><Button variant="ghost" onClick={copyLink}><Copy size={17} /> Copy queue link</Button><Link className="button button-ghost" to={`/display/${state.business.slug}`} target="_blank"><Monitor size={16} /> Public display</Link></div></div>
       <div className="poster-preview-area"><span className="preview-label">LIVE PRINT PREVIEW</span><div className={`poster-stage stage-${format}`}><div ref={posterRef} className={`print-poster poster-${format} poster-${state.business.kind}`} style={{ '--poster-accent': state.business.accentColor } as CSSProperties}><div className="poster-top"><BrandMark /><span>QUEUE SMARTER. LIVE BETTER.</span></div><div className="poster-business">{state.business.logo ? <img className="poster-logo-image" src={state.business.logo} alt="" /> : <BusinessMark kind={state.business.kind} size="large" />}<div><span>WELCOME TO</span><h2>{state.business.name}</h2><p>{state.business.location} · {businessHours(state.business)}</p></div></div><div className="poster-live-status"><span className={queueOpen ? 'poster-open-dot' : 'poster-closed-dot'} /> <b>{queueOpen ? 'QUEUE OPEN NOW' : 'QUEUE TEMPORARILY UNAVAILABLE'}</b><span>{queueOpen ? <>Now serving {serving?.id ?? '—'} · {waiting} waiting · New guest ~{minutesLabel(estimatedWait?.min ?? 0, estimatedWait?.max ?? 0)}</> : 'Check the business hours before joining'}</span></div><div className="poster-main-copy"><span>{isWash ? 'KEEP YOUR DAY MOVING' : 'SKIP THE WAIT'}</span><h1>{isWash ? <>SCAN TO JOIN<br />THE WASH QUEUE</> : <>SCAN TO JOIN<br />THE QUEUE</>}</h1><p>{isWash ? 'No app needed. See your wait time and come back when your wash bay is ready.' : 'No app needed. See your wait time and come back when it’s your turn.'}</p></div><div className="poster-steps"><span>1 · Scan</span><span>2 · Choose service</span><span>3 · Return when called</span></div><div className="poster-qr-wrap"><div className="qr-frame"><QRCodeSVG value={queueUrl} size={format === 'a4' ? 178 : 148} bgColor="#ffffff" fgColor="#112c28" level="M" includeMargin /></div><div className="poster-url"><QrCode size={16} /><span>{queueUrl}</span></div></div><div className="poster-footer"><span>Check in when you return · No app needed.</span><span>QEase</span></div></div></div></div>
     </section>
   </DashboardShell>
@@ -1008,14 +1177,45 @@ type DangerAction = 'reset' | 'restore' | 'clear' | null
 
 function SettingsPage() {
   const { businessSlug } = useParams()
-  const { state, saveBusiness, resetDemo, clearData } = useQueue(businessSlug)
+  const { state, saveBusiness, resetDemo, clearData, syncMode } = useQueue(businessSlug)
+  const toast = useToast()
   const [draft, setDraft] = useState<BusinessSettings>(state.business)
-  const [saved, setSaved] = useState(false)
   const [danger, setDanger] = useState<DangerAction>(null)
   useEffect(() => setDraft(state.business), [state.business])
-  const update = <K extends keyof BusinessSettings>(key: K, value: BusinessSettings[K]) => { setSaved(false); setDraft((current) => ({ ...current, [key]: value })) }
-  const save = (event: FormEvent) => { event.preventDefault(); saveBusiness(draft); setSaved(true); window.setTimeout(() => setSaved(false), 2400) }
-  const confirmDanger = () => { if (danger === 'clear') clearData(); else resetDemo(); setDanger(null) }
+  const update = <K extends keyof BusinessSettings>(key: K, value: BusinessSettings[K]) => {
+    setDraft((current) => ({ ...current, [key]: value }))
+  }
+  const applyBrandColorImmediately = (hexColor: string, label?: string) => {
+    const normalized = hexColor.startsWith('#') ? hexColor : `#${hexColor}`
+    setDraft((current) => ({ ...current, accentColor: normalized }))
+    saveBusiness({ accentColor: normalized })
+    const vars = deriveBrandCssVariables(normalized)
+    Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v))
+    toast.success(
+      label ? `Brand theme set to ${label}` : 'Brand color updated',
+      `Primary CSS variable --business-accent (${normalized.toUpperCase()}) saved to ${syncMode === 'live' ? 'Supabase database' : 'persistent queue state'}.`,
+    )
+  }
+  const save = (event: FormEvent) => {
+    event.preventDefault()
+    saveBusiness(draft)
+    const vars = deriveBrandCssVariables(draft.accentColor)
+    Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v))
+    toast.success(
+      `Saved ${draft.name} settings`,
+      `Configuration and --business-accent (${draft.accentColor.toUpperCase()}) persisted.`,
+    )
+  }
+  const confirmDanger = () => {
+    if (danger === 'clear') {
+      clearData()
+      toast.warning('Cleared local queue data', `${state.business.name} tickets and analytics were cleared.`)
+    } else {
+      resetDemo()
+      toast.info('Restored seeded demo data', `${state.business.name} has been reset to its fresh demo scenario.`)
+    }
+    setDanger(null)
+  }
   const dangerCopy = danger === 'clear'
     ? { title: 'Clear local demo data?', body: `This removes ${state.business.name} tickets, analytics, and feedback from this browser.`, label: 'Clear local data' }
     : danger === 'restore'
@@ -1024,14 +1224,109 @@ function SettingsPage() {
   return <DashboardShell>
     <DashboardHeading eyebrow="SETUP & QUEUE RULES" title={`Make ${state.business.name} yours`}><Button onClick={() => (document.getElementById('settings-form') as HTMLFormElement | null)?.requestSubmit()}><CheckCircle2 size={17} /> Save changes</Button></DashboardHeading>
     <form id="settings-form" className="settings-layout" onSubmit={save}>
-      <section className="settings-section"><div className="settings-section-title"><div className="settings-title-icon"><BusinessMark kind={state.business.kind} size="small" /></div><div><h2>Business profile</h2><p>What customers see when they scan your code.</p></div></div><div className="settings-fields"><label className="field-label">Business name<input value={draft.name} onChange={(event) => update('name', event.target.value)} /></label><label className="field-label">Category<input value={draft.category} onChange={(event) => update('category', event.target.value)} /></label><label className="field-label settings-field-wide">Business description<textarea rows={3} value={draft.description} onChange={(event) => update('description', event.target.value)} /></label><label className="field-label">Location<input value={draft.location} onChange={(event) => update('location', event.target.value)} /></label><label className="field-label">Contact phone<input value={draft.phone} onChange={(event) => update('phone', event.target.value)} /></label><label className="field-label">Accent color<input type="color" value={draft.accentColor} onChange={(event) => update('accentColor', event.target.value)} /></label></div><div className="brand-photo-grid"><MediaPicker label="Business logo" value={draft.logo} onChange={(logo) => update('logo', logo)} /><MediaPicker label="Storefront / cover photo" value={draft.coverImage} onChange={(coverImage) => update('coverImage', coverImage)} /></div></section>
+      <section className="settings-section wide-settings customization-studio-section" aria-label="Customization">
+        <div className="settings-section-title">
+          <div className="settings-title-icon"><Palette size={19} /></div>
+          <div>
+            <h2>Customization</h2>
+            <p>Dynamically brand your queue experience. Changes update CSS variables (<code>--business-accent</code>) immediately and persist to your database.</p>
+          </div>
+        </div>
+        <div className="customization-studio-grid">
+          <div className="customization-controls">
+            <span className="field-label">Curated brand palettes</span>
+            <div className="brand-preset-grid" role="group" aria-label="Brand color presets">
+              {BRAND_COLOR_PRESETS.map((preset) => {
+                const isSelected = draft.accentColor.toLowerCase() === preset.color.toLowerCase()
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className={`brand-preset-card ${isSelected ? 'selected' : ''}`}
+                    onClick={() => applyBrandColorImmediately(preset.color, preset.name)}
+                  >
+                    <span
+                      className="brand-preset-swatch"
+                      style={{ background: `linear-gradient(135deg, ${preset.color}, ${preset.secondary})` }}
+                    />
+                    <span className="brand-preset-meta">
+                      <b>{preset.name}</b>
+                      <small>{preset.badgeLabel} · {preset.color.toUpperCase()}</small>
+                    </span>
+                    {isSelected && <CheckCircle2 size={16} />}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="custom-color-row">
+              <label className="field-label" htmlFor="custom-brand-color-picker">
+                <span className="customization-label">Custom brand hex (<code>--business-accent</code>)</span>
+                <div className="custom-color-input-group">
+                  <input
+                    id="custom-brand-color-picker"
+                    type="color"
+                    value={draft.accentColor}
+                    onChange={(event) => applyBrandColorImmediately(event.target.value)}
+                  />
+                  <input
+                    type="text"
+                    value={draft.accentColor}
+                    onChange={(event) => update('accentColor', event.target.value)}
+                    aria-label="Custom hex color code"
+                    placeholder="#0f766e"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => applyBrandColorImmediately(draft.accentColor, 'Custom Brand')}
+                  >
+                    Apply color
+                  </Button>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <aside
+            className="customization-live-preview"
+            style={{ '--business-accent': draft.accentColor } as CSSProperties}
+          >
+            <span className="eyebrow">LIVE BRAND PREVIEW</span>
+            <div className="preview-brand-card">
+              <div className="preview-brand-head">
+                <BusinessMark kind={state.business.kind} size="normal" />
+                <div>
+                  <strong>{draft.name}</strong>
+                  <small>{draft.location}</small>
+                </div>
+                <span className="preview-accent-pill">{draft.accentColor.toUpperCase()}</span>
+              </div>
+              <div className="preview-ticket-strip">
+                <div>
+                  <span>NOW SERVING</span>
+                  <b>{state.business.queuePrefix}23</b>
+                </div>
+                <div>
+                  <span>RETURN WINDOW</span>
+                  <b>15–25 min</b>
+                </div>
+              </div>
+              <div className="preview-cta-demo">
+                <span>Join {draft.name}’s queue</span>
+                <ArrowLeft size={15} className="arrow-forward" />
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section className="settings-section"><div className="settings-section-title"><div className="settings-title-icon"><BusinessMark kind={state.business.kind} size="small" /></div><div><h2>Business profile</h2><p>What customers see when they scan your code.</p></div></div><div className="settings-fields"><label className="field-label">Business name<input value={draft.name} onChange={(event) => update('name', event.target.value)} /></label><label className="field-label">Category<input value={draft.category} onChange={(event) => update('category', event.target.value)} /></label><label className="field-label settings-field-wide">Business description<textarea rows={3} value={draft.description} onChange={(event) => update('description', event.target.value)} /></label><label className="field-label">Location<input value={draft.location} onChange={(event) => update('location', event.target.value)} /></label><label className="field-label">Contact phone<input value={draft.phone} onChange={(event) => update('phone', event.target.value)} /></label><label className="field-label">Accent color<input type="color" value={draft.accentColor} onChange={(event) => applyBrandColorImmediately(event.target.value)} /></label></div><div className="brand-photo-grid"><MediaPicker label="Business logo" value={draft.logo} onChange={(logo) => update('logo', logo)} /><MediaPicker label="Storefront / cover photo" value={draft.coverImage} onChange={(coverImage) => update('coverImage', coverImage)} /></div></section>
       <section className="settings-section"><div className="settings-section-title"><div className="settings-title-icon"><Clock3 size={19} /></div><div><h2>Hours</h2><p>Keep customers clear on when the queue can be used.</p></div></div><div className="settings-fields"><label className="field-label">Open days<input value={draft.openDays} onChange={(event) => update('openDays', event.target.value)} placeholder="e.g. Tue–Sun" /></label><label className="field-label">Opening time<input type="time" value={draft.openingTime} onChange={(event) => update('openingTime', event.target.value)} /></label><label className="field-label">Closing time<input type="time" value={draft.closingTime} onChange={(event) => update('closingTime', event.target.value)} /></label><label className="field-label">Break hours <span>optional</span><input value={draft.breakHours} onChange={(event) => update('breakHours', event.target.value)} placeholder="e.g. 13:00–13:30" /></label><Toggle checked={draft.closedToday} onChange={(value) => update('closedToday', value)} label="Closed today override" helper="Blocks new joins but keeps existing tickets visible." /></div></section>
       <section className="settings-section wide-settings"><div className="settings-section-title"><div className="settings-title-icon"><UsersRound size={19} /></div><div><h2>Queue rules</h2><p>Small controls that make Return Windows fit your team.</p></div></div><div className="settings-fields queue-rule-fields"><label className="field-label">Queue prefix<input maxLength={3} value={draft.queuePrefix} onChange={(event) => update('queuePrefix', event.target.value.toUpperCase())} /></label><label className="field-label">Maximum queue size<input type="number" min="1" value={draft.maxQueueSize} onChange={(event) => update('maxQueueSize', Number(event.target.value))} /></label><label className="field-label">Average-wait target<input type="number" min="1" value={draft.targetWaitMinutes} onChange={(event) => update('targetWaitMinutes', Number(event.target.value))} /><small>Minutes</small></label><label className="field-label">No-show grace period<input type="number" min="1" max="60" value={draft.noShowGraceMinutes} onChange={(event) => update('noShowGraceMinutes', Number(event.target.value))} /><small>Minutes</small></label><label className="field-label">Return Window lead time<input type="number" min="0" max="30" value={draft.returnWindowLead} onChange={(event) => update('returnWindowLead', Number(event.target.value))} /><small>Minutes before the lower ETA</small></label><label className="field-label">Return-soon trigger<input type="number" min="1" max="5" value={draft.returnSoonThreshold} onChange={(event) => update('returnSoonThreshold', Number(event.target.value))} /><small>People ahead</small></label><label className="field-label">Check-in radius<input type="number" min="25" max="1000" value={draft.checkInRadius} onChange={(event) => update('checkInRadius', Number(event.target.value))} /><small>Metres around the business</small></label><label className="field-label">Business latitude<input type="number" step="any" value={draft.latitude} onChange={(event) => update('latitude', Number(event.target.value))} /></label><label className="field-label">Business longitude<input type="number" step="any" value={draft.longitude} onChange={(event) => update('longitude', Number(event.target.value))} /></label><label className="field-label">New customer policy<select value={draft.queueStatus} onChange={(event) => update('queueStatus', event.target.value as BusinessSettings['queueStatus'])}><option value="open">Accept new customers</option><option value="paused">Pause new customers</option><option value="closed">Close queue to new customers</option></select></label><Toggle checked={draft.allowRejoin} onChange={(value) => update('allowRejoin', value)} label="Allow missed customers to rejoin at end" /><Toggle checked={draft.allowWalkIns} onChange={(value) => update('allowWalkIns', value)} label="Allow staff to add manual walk-ins" /><Toggle checked={draft.allowLeave} onChange={(value) => update('allowLeave', value)} label="Allow customers to leave queue" /></div></section>
       <section className="settings-section"><div className="settings-section-title"><div className="settings-title-icon"><Bell size={19} /></div><div><h2>Notifications & counter payments</h2><p>In-app ticket alerts always work without external messaging.</p></div></div><div className="settings-fields notification-fields"><Toggle checked={draft.browserAlerts} onChange={(value) => update('browserAlerts', value)} label="Browser alerts enabled" helper="Customers can choose browser alerts during queue entry." /><Toggle checked={draft.returnSoonAlerts} onChange={(value) => update('returnSoonAlerts', value)} label="Return-soon alerts" /><Toggle checked={draft.turnAlerts} onChange={(value) => update('turnAlerts', value)} label="Your-turn alerts" /><Toggle checked={draft.etaAlerts} onChange={(value) => update('etaAlerts', value)} label="Meaningful ETA-change alerts" /><Toggle checked={draft.callSoundEnabled} onChange={(value) => update('callSoundEnabled', value)} label="Play a staff-screen call chime" helper="A short browser sound after staff calls a customer. Browser audio is optional." /><Toggle checked={draft.customerCardReady} onChange={(value) => update('customerCardReady', value)} label="Debit / card terminal available" /><Toggle checked={draft.customerQrisReady} onChange={(value) => update('customerQrisReady', value)} label="Accept QRIS at this business" helper="Only enable this after this specific business has its own QRIS code. QEase subscription QRIS is completely separate." /><div className="settings-field-wide qris-setup"><MediaPicker label="This business’s QRIS code" value={draft.customerQrisImage} onChange={(customerQrisImage) => update('customerQrisImage', customerQrisImage)} alt={`${draft.name} QRIS code`} /><small>When QRIS is enabled, this image can be opened by customers choosing QRIS and enlarged by staff at the counter. It is never used for the QEase subscription.</small></div><div className="coming-soon-row"><Bell size={18} /><div><b>WhatsApp and SMS</b><span>Coming soon — no messaging integration is required for this local demo.</span></div><span>Coming soon</span></div></div></section>
       <section className="settings-section"><div className="settings-section-title"><div className="settings-title-icon"><TrendingUp size={19} /></div><div><h2>Business performance assumptions</h2><p>Used only for the estimated net-profit view. Ticket prices and service costs are saved when a customer joins.</p></div></div><div className="settings-fields"><label className="field-label">Monthly fixed costs<input type="number" min="0" value={draft.monthlyFixedCosts} onChange={(event) => update('monthlyFixedCosts', Number(event.target.value))} /><small>Rent, utilities, and other monthly operating costs.</small></label><label className="field-label">Operating days per month<input type="number" min="1" max="31" value={draft.operatingDaysPerMonth} onChange={(event) => update('operatingDaysPerMonth', Number(event.target.value))} /><small>Used to estimate a daily fixed-cost share.</small></label></div></section>
       <section className="settings-section danger-section"><div className="settings-section-title"><div className="settings-title-icon danger-icon"><ShieldAlert size={19} /></div><div><h2>Demo &amp; danger zone</h2><p>Useful for running a polished presentation from the beginning.</p></div></div><div className="danger-actions"><Button type="button" variant="secondary" onClick={() => setDanger('reset')}><RotateCcw size={16} /> Reset current business demo queue</Button><Button type="button" variant="secondary" onClick={() => setDanger('restore')}><Sparkles size={16} /> Restore current seeded data</Button><Button type="button" variant="danger" onClick={() => setDanger('clear')}><XCircle size={16} /> Clear current local data</Button></div></section>
     </form>
-    {saved && <div className="save-toast"><CheckCircle2 size={17} /> Settings saved locally.</div>}
     <ConfirmDialog open={Boolean(danger)} title={dangerCopy.title} body={dangerCopy.body} confirmLabel={dangerCopy.label} onClose={() => setDanger(null)} onConfirm={confirmDanger} />
   </DashboardShell>
 }

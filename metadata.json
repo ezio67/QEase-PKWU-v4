@@ -1,0 +1,10 @@
+{
+  "name": "QEase — Queue Smarter, Live Better",
+  "description": "A thoughtful virtual queue experience for local businesses with live return windows, Google Maps discovery, brand customization, and a Gemini queue assistant.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
