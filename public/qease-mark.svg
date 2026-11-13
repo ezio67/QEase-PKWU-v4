@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-labelledby="title description">
+  <title id="title">QEase icon</title>
+  <desc id="description">The QEase moving Q logo mark.</desc>
+  <defs>
+    <linearGradient id="badge" x1="48" y1="40" x2="312" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#168B7B"/>
+      <stop offset="1" stop-color="#0B5E58"/>
+    </linearGradient>
+  </defs>
+  <rect x="28" y="28" width="304" height="304" rx="94" fill="url(#badge)"/>
+  <path d="M180 91C130.29 91 90 131.29 90 181C90 230.71 130.29 271 180 271C204.2 271 226.17 261.45 242.34 245.91" fill="none" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round"/>
+  <path d="M190 190L252 252" fill="none" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round"/>
+  <path d="M219 252H252V219" fill="none" stroke="#B8EFE0" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="100" cy="96" r="12" fill="#B8EFE0"/>
+</svg>
